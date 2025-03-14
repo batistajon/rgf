@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Collect Ripgrep arguments (if any)
 rg_args=()
 for arg in "$@"; do
     case "$arg" in
@@ -14,18 +13,6 @@ for arg in "$@"; do
     esac
 done
 
-# If no search term is provided, prompt via fzf
-# if [[ -z "$*" ]]; then
-#     search_term=$(rg --files | fzf --prompt="Search for: ")
-#     if [[ -z "$search_term" ]]; then
-#         echo "No search term entered. Exiting."
-#         exit 1
-#     fi
-# else
-#     search_term="${rg_args[@]}"
-# fi
-
-# Loop to allow continuing search if the user exits Vim
 while true; do
     selected=$(rg --color=always --line-number --no-heading --smart-case ${rg_args[@]} "$search_term" |
         fzf --ansi \
@@ -34,20 +21,16 @@ while true; do
             --preview 'bat --color=always {1} --highlight-line {2}' \
             --preview-window 'up,60%,border-bottom,+{2}+3/3,~3')
 
-    # If no file was selected, exit
     if [[ -z "$selected" ]]; then
         echo "No file selected. Exiting."
         exit 0
     fi
 
-    # Extract filename and line number
     file=$(echo "$selected" | cut -d ':' -f 1)
     line=$(echo "$selected" | cut -d ':' -f 2)
 
-    # Open the file in Vim at the specified line
     nvim "$file" +"$line"
 
-    # Ask if the user wants to continue searching
     read -p "Continue searching? (y/n): " choice
     if [[ "$choice" != "y" ]]; then
         exit 0
